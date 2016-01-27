@@ -24,7 +24,6 @@ import com.google.common.base.Function;
 import com.google.common.base.Functions;
 import com.google.common.base.Strings;
 import com.google.common.collect.Sets;
-
 import org.geotools.filter.text.cql2.CQLException;
 import org.geotools.filter.text.ecql.ECQL;
 import org.geotools.styling.AnchorPoint;
@@ -59,7 +58,6 @@ import java.net.URL;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
-
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import javax.imageio.ImageIO;
@@ -87,6 +85,8 @@ public final class JsonStyleParserHelper {
     static final String JSON_LABEL_ROTATION = "labelRotation";
     static final String JSON_LABEL_PERPENDICULAR_OFFSET = "labelPerpendicularOffset";
     static final String JSON_FILL_COLOR = "fillColor";
+    static final String JSON_FILL_PATTERN = "fillPattern";
+    static final String JSON_FILL_PATTERN_WIDTH = "fillPatternWidth";
     static final String JSON_STROKE_COLOR = "strokeColor";
     static final String JSON_STROKE_OPACITY = "strokeOpacity";
     static final String JSON_STROKE_WIDTH = "strokeWidth";
@@ -260,6 +260,7 @@ public final class JsonStyleParserHelper {
                 return testForLegalFileUrl(this.configuration, fileURL).toExternalForm();
             } catch (MalformedURLException e1) {
                 // unable to convert to file url so give up and throw exception;
+            	System.out.println(externalGraphicUrl+"  -->  "+this.configuration.getDirectory());
                 throw ExceptionUtils.getRuntimeException(e);
             }
         }
@@ -295,8 +296,9 @@ public final class JsonStyleParserHelper {
         }
 
         final PolygonSymbolizer symbolizer = this.styleBuilder.createPolygonSymbolizer();
+        
         symbolizer.setFill(createFill(styleJson));
-
+        
         symbolizer.setStroke(createStroke(styleJson, false));
 
         return symbolizer;
@@ -591,10 +593,17 @@ public final class JsonStyleParserHelper {
             return null;
         }
         final String fillColor = styleJson.optString(JSON_FILL_COLOR, "black");
-        return addFill(fillColor, styleJson.optString(JSON_FILL_OPACITY, "1.0"));
+        final String fillPattern = styleJson.optString(JSON_FILL_PATTERN, null);
+        final int fillPatternWidth = styleJson.optInt(JSON_FILL_PATTERN_WIDTH, 1);
+        final String fillOpacity = styleJson.optString(JSON_FILL_OPACITY, "1.0");
+        return addFill(fillColor, fillPattern, fillPatternWidth, fillOpacity);
+    }
+    
+    private Fill addFill(final String fillColor, final String fillOpacity) {
+    	return addFill(fillColor, null, 1, fillOpacity);
     }
 
-    private Fill addFill(final String fillColor, final String fillOpacity) {
+    private Fill addFill(final String fillColor, final String fillPattern, final int fillPatternWidth, final String fillOpacity) {
         final Expression finalFillColor = parseProperty(fillColor, new Function<String, Object>() {
             @Nullable
             @Override
@@ -609,7 +618,15 @@ public final class JsonStyleParserHelper {
                 return Double.parseDouble(fillOpacity);
             }
         });
-        return this.styleBuilder.createFill(finalFillColor, opacity);
+        Fill fill = this.styleBuilder.createFill(finalFillColor, opacity);
+        if(fillPattern!=null)
+        {
+	        Integer intColor = Integer.parseInt(fillColor.substring(1),16); 
+	        Mark dot = this.styleBuilder.createMark(fillPattern, new Color(intColor), fillPatternWidth);
+	        Graphic fillGraphic = this.styleBuilder.createGraphic(null, dot, null);
+	        fill.setGraphicFill(fillGraphic);
+        }
+        return fill;
     }
 
     private Object toColorExpression(final String color) {
