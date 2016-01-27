@@ -62,7 +62,8 @@ public final class LegendProcessor extends AbstractProcessor<LegendProcessor.Inp
     private static final String NAME_COLUMN = "name";
     private static final String ICON_COLUMN = "icon";
     private static final String REPORT_COLUMN = "report";
-    private static final String LEVEL_COLUMN = "level";
+    private static final String LEVEL_COLUMN = "level"; 
+    private static final String VALUE_COLUMN = "value"; // @author Galigeo // Column for handling value
     @Autowired
     private JasperReportBuilder jasperReportBuilder;
 
@@ -121,7 +122,7 @@ public final class LegendProcessor extends AbstractProcessor<LegendProcessor.Inp
     @Override
     public Output execute(final Input values, final ExecutionContext context) throws Exception {
         final List<Object[]> legendList = new ArrayList<Object[]>();
-        final String[] legendColumns = {NAME_COLUMN, ICON_COLUMN, REPORT_COLUMN, LEVEL_COLUMN};
+        final String[] legendColumns = {NAME_COLUMN, ICON_COLUMN, VALUE_COLUMN, REPORT_COLUMN, LEVEL_COLUMN}; // @author Galigeo // Add the value column
         final LegendAttributeValue legendAttributes = values.legend;
         fillLegend(values.clientHttpRequestFactory, legendAttributes, legendList, 0, context, values.tempTaskDirectory);
         final Object[][] legend = new Object[legendList.size()][];
@@ -151,6 +152,8 @@ public final class LegendProcessor extends AbstractProcessor<LegendProcessor.Inp
         int insertNameIndex = legendList.size();
         final URL[] icons = legendAttributes.icons;
         Closer closer = Closer.create();
+        
+        
         if (icons != null) {
             for (URL icon : icons) {
                 BufferedImage image = null;
@@ -182,8 +185,16 @@ public final class LegendProcessor extends AbstractProcessor<LegendProcessor.Inp
                     // if a max width is given, create a sub-report containing the cropped graphic
                     report = createSubReport(image, tempTaskDirectory).toString();
                 }
-                final Object[] iconRow = {null, image, report, level};
-                legendList.add(iconRow);
+                final Object[] iconRow;
+                // @author Galigeo 
+                // Check if a value is associated with the icons in the object and add it to the object if true
+                if (legendAttributes.value != null) {
+                	iconRow = new Object[]{null, image, legendAttributes.value, report, level};
+                } else {
+                	iconRow = new Object[]{null, image, null, report, level};
+                }
+                
+				legendList.add(iconRow);
             }
         }
 
@@ -194,8 +205,12 @@ public final class LegendProcessor extends AbstractProcessor<LegendProcessor.Inp
         }
 
         if (!legendList.isEmpty()) {
-            legendList.add(insertNameIndex, new Object[]{legendAttributes.name, null, null, level});
+            legendList.add(insertNameIndex, new Object[]{legendAttributes.name, null, null, null, level});
         }
+        
+        //if (!legendList.isEmpty()) {
+       //     legendList.add(new Object[]{null, null, legendAttributes.value, null, level});
+        //}
     }
 
     private URI createSubReport(final BufferedImage originalImage,
