@@ -56,6 +56,8 @@ import javax.imageio.ImageIO;
  *
  * @author Jesse
  * @author sbrunner
+ * @author Vincent D. (galigeo)
+ * @author Ganaël J. (galigeo)
  */
 public final class LegendProcessor extends AbstractProcessor<LegendProcessor.Input, LegendProcessor.Output> {
     private static final Logger LOGGER = LoggerFactory.getLogger(LegendProcessor.class);
