@@ -90,6 +90,7 @@ public final class WmsUtilities {
             addDpiParam(extraParams, (int) Math.round(dpi), wmsLayerParam.serverType);
         }
         
+        // force transparent output
         extraParams.put("TRANSPARENT", "TRUE");
         
         return URIUtils.addParams(getMapUri, extraParams, Collections.<String>emptySet());
