@@ -51,5 +51,12 @@ public final class LegendAttribute extends ReflectiveAttribute<LegendAttribute.L
          */
         @HasDefaultValue
         public LegendAttributeValue[] classes;
+        
+        // @author Galigeo
+        /**
+         * Class value (generally associated to an icon)
+         */
+        @HasDefaultValue
+        public String value;
     }
 }

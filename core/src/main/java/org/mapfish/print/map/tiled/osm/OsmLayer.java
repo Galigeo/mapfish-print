@@ -93,7 +93,7 @@ public final class OsmLayer extends AbstractTiledLayer {
             if (commonUrl.contains("{x}") && commonUrl.contains("{z}")
                     && (commonUrl.contains("{y}") || commonUrl.contains("{-y}"))) {
                 String url = commonUrl
-                        .replace("{z}", String.format("%02d", this.resolutionIndex))
+                        .replace("{z}", this.resolutionIndex + "") //String.format("%02d", this.resolutionIndex)) //Edit Galigeo, fix ESRI issue when this parameter is formatted with 0x
                         .replace("{x}", Integer.toString(column))
                         .replace("{y}", Integer.toString(row));
                 if (commonUrl.contains("{-y}")) {

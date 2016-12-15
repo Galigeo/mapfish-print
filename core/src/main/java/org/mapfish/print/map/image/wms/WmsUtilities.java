@@ -68,6 +68,10 @@ public final class WmsUtilities {
         if (wmsLayerParam.serverType != null && dpi != Constants.PDF_DPI) {
             addDpiParam(extraParams, (int) Math.round(dpi), wmsLayerParam.serverType);
         }
+        
+        // force transparent output
+        extraParams.put("TRANSPARENT", "TRUE");
+        
         return URIUtils.addParams(getMapUri, extraParams, Collections.<String>emptySet());
 
     }
