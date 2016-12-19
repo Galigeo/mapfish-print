@@ -218,18 +218,21 @@ public final class LegendProcessor extends AbstractProcessor<LegendProcessor.Inp
             for (URL icon : icons) {
                 BufferedImage image = null;
                 try {
+					checkCancelState(context);
+                    final ClientHttpRequest request = clientHttpRequestFactory.createRequest(icon.toURI(), HttpMethod.GET);
+                    final ClientHttpResponse httpResponse = closer.register(request.execute());
                     if (httpResponse.getStatusCode() == HttpStatus.OK) {
                         image = ImageIO.read(httpResponse.getBody());
                         if (image == null) {
-                            LOGGER.warn("The URL: " + this.icon + " is NOT an image format that can be decoded");
-                        } else {
-                            timer.stop();
+                            LOGGER.warn("The URL: " + icon + " is NOT an image format that can be decoded");
                         }
                     } else {
-                        LOGGER.warn("Failed to load image from: " + this.icon
+                        LOGGER.warn("Failed to load image from: " + icon
                                 + " due to server side error.\n\tResponse Code: " + httpResponse.getStatusCode()
                                 + "\n\tResponse Text: " + httpResponse.getStatusText());
                     }
+                }catch (Exception e) {
+                    LOGGER.warn("Failed to load image from: " + icon, e);
                 } finally {
                     httpResponse.close();
                 }
