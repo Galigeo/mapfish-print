@@ -122,7 +122,7 @@ public final class LegendProcessor extends AbstractProcessor<LegendProcessor.Inp
         final List<Object[]> legendList = new ArrayList<Object[]>();
         final String[] legendColumns = {NAME_COLUMN, ICON_COLUMN, VALUE_COLUMN, REPORT_COLUMN, LEVEL_COLUMN}; // @author Galigeo // Add the value column
         final LegendAttributeValue legendAttributes = values.legend;
-        fillLegend(values.clientHttpRequestFactory, legendAttributes, legendList, context, values.tempTaskDirectory);
+        fillLegend(values.clientHttpRequestFactory, legendAttributes, legendList, 0, context, values.tempTaskDirectory);
         final Object[][] legend = new Object[legendList.size()][];
 
         final JRTableModelDataSource dataSource = new JRTableModelDataSource(new TableDataSource(legendColumns,
@@ -218,7 +218,7 @@ public final class LegendProcessor extends AbstractProcessor<LegendProcessor.Inp
             for (URL icon : icons) {
                 BufferedImage image = null;
                 try {
-					checkCancelState(context);
+                    checkCancelState(context);
                     final ClientHttpRequest request = clientHttpRequestFactory.createRequest(icon.toURI(), HttpMethod.GET);
                     final ClientHttpResponse httpResponse = closer.register(request.execute());
                     if (httpResponse.getStatusCode() == HttpStatus.OK) {
@@ -227,26 +227,20 @@ public final class LegendProcessor extends AbstractProcessor<LegendProcessor.Inp
                             LOGGER.warn("The URL: " + icon + " is NOT an image format that can be decoded");
                         }
                     } else {
-                        LOGGER.warn("Failed to load image from: " + icon
-                                + " due to server side error.\n\tResponse Code: " + httpResponse.getStatusCode()
-                                + "\n\tResponse Text: " + httpResponse.getStatusText());
+                        LOGGER.warn("Failed to load image from: " + icon + " due to server side error.\n\tResponse Code: " +
+                                    httpResponse.getStatusCode() + "\n\tResponse Text: " + httpResponse.getStatusText());
                     }
-                }catch (Exception e) {
+                } catch (Exception e) {
                     LOGGER.warn("Failed to load image from: " + icon, e);
                 } finally {
-                    httpResponse.close();
+                    closer.close();
                 }
-            }
 
-            if (image == null) {
-                image = getMissingImage();
-                LegendProcessor.this.metricRegistry.counter(metricName + ".error").inc();
-            }
+                if (image == null) {
+                    image = this.getMissingImage();
+                }
 
-            String report = null;
-            if (LegendProcessor.this.maxWidth != null) {
-                // if a max width is given, create a sub-report containing the cropped graphic
-                report = createSubReport(image, this.tempTaskDirectory).toString();
+                String report = null;
                 if (this.maxWidth != null) {
                     // if a max width is given, create a sub-report containing the cropped graphic
                     report = createSubReport(image, tempTaskDirectory).toString();
@@ -262,8 +256,21 @@ public final class LegendProcessor extends AbstractProcessor<LegendProcessor.Inp
                 
 				legendList.add(iconRow);
             }
-            return new Object[] {null, image, report, this.level};
         }
+
+        if (legendAttributes.classes != null) {
+            for (LegendAttributeValue value : legendAttributes.classes) {
+                fillLegend(clientHttpRequestFactory, value, legendList, level + 1, context, tempTaskDirectory);
+            }
+        }
+
+        if (!legendList.isEmpty()) {
+            legendList.add(insertNameIndex, new Object[]{legendAttributes.name, null, null, null, level});
+        }
+        
+        //if (!legendList.isEmpty()) {
+       //     legendList.add(new Object[]{null, null, legendAttributes.value, null, level});
+        //}
     }
     
     private class NameTask implements Callable<Object[]> {
