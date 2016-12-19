@@ -321,8 +321,8 @@ public final class LegendProcessor extends AbstractProcessor<LegendProcessor.Inp
         List<Future<Object[]>> futures = this.requestForkJoinPool.invokeAll(tasks);            
 
 
-        if (!legendList.isEmpty()) {
-            legendList.add(insertNameIndex, new Object[]{legendAttributes.name, null, null, null, level});
+        for (Future<Object[]> future : futures) {
+           legendList.add(future.get());
         }
 
     }
