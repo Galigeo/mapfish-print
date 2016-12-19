@@ -232,8 +232,6 @@ public final class LegendProcessor extends AbstractProcessor<LegendProcessor.Inp
                 } finally {
                     httpResponse.close();
                 }
-            } catch (Exception e) {
-                LOGGER.warn("Failed to load image from: " + this.icon, e);
             }
 
             if (image == null) {
