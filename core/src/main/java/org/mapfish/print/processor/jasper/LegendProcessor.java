@@ -3,6 +3,7 @@ package org.mapfish.print.processor.jasper;
 import com.codahale.metrics.MetricRegistry;
 import com.codahale.metrics.Timer;
 import com.google.common.collect.Lists;
+import com.google.common.io.Closer;
 
 import jsr166y.ForkJoinPool;
 import net.sf.jasperreports.engine.JRException;
